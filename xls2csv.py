@@ -62,39 +62,6 @@ except ImportError:
     print("-----------------------------------------------------------\n")
     sys.exit(1)
 
-def convertFactory(options, wSheet):
-    for numRow in range(wSheet.nrows):
-        if(numRow not in options.remrows):
-            liste = []
-            for numCol in range(wSheet.ncols):
-                if(numCol not in options.remcols):
-                    cellType = wSheet.cell_type(numRow,numCol)
-                    cellValue = wSheet.cell_value(numRow,numCol)
-                    if((options.colasint == "all") or (cellType == xlrd.XL_CELL_BOOLEAN) or (cellType == xlrd.XL_CELL_NUMBER and numCol in options.colasint )):
-                        try:
-                            liste.append(str(int(cellValue)))
-                        except ValueError as error:
-                            liste.append(cellValue)
-                            #~ warnings.warn("Bad cell format : gets string, expects number", stacklevel=2)
-                    elif(cellType == xlrd.XL_CELL_NUMBER ):
-                        liste.append(str(cellValue))
-                    elif(cellType == xlrd.XL_CELL_DATE ):
-                        # trying to handle dates - maybe buggy at this time !
-                        # by default, datemode is 1900-based
-                        datemode = 0 # 1900-based
-                        # datemode = 1 # 1904-based
-                        tp = xlrd.xldate_as_tuple(cellValue,0)
-                        mydate = datetime.datetime( tp[0], tp[1], tp[2], tp[3], tp[4], tp[5] )
-                        # return isoformat (may be improved in the future)
-                        liste.append(mydate.isoformat())
-                    else:
-                        # conversion for latin-1 : really needed ??
-                        if(options.encloseText):
-                            cellValue = cellValue.replace("\"","\"\"")
-                            liste.append("\"%s\""%(cellValue))
-                        else:
-                            liste.append(cellValue)
-            yield liste
 
 def manageOptions(options):
     if(options.verbose):
@@ -132,59 +99,115 @@ def manageOptions(options):
 
     return options
 
-def convert2csv(options):
-    options = manageOptions(options)
-    WIN32 = True if (sys.platform == 'win32') else False
-    if(options.lineend == "LF"):
-        NIX = True
-    else:
-        NIX = False
+class Xls2csv():
 
-    # Open input file
-    if(options.inputEncoding):
-        book = xlrd.open_workbook(filename=options.ifname, encoding_override=options.inputEncoding)
-    else:
-        book = xlrd.open_workbook(filename=options.ifname)
-
-    # Open output file
-    outfile = codecs.open(options.ofname, 'w', encoding=options.outputEncoding)
-
-    # Statistics
-    nSheets = book.nsheets
-    if(options.stats):
-        print("\nStatistics of input Excel file :")
-        print("... sheets found = %d" % nSheets)
-        print("... encoding = %s" % book.encoding)
-
-    if(options.numsheet >= nSheets or options.numsheet < 0):
-        raise ValueError
-
-    # Select working sheet
-    wSheet = book.sheet_by_index(options.numsheet)
-    if(options.stats):
-        print("\nStatistics of sheet #%d" % options.numsheet)
-        print("... sheet name = %s" % wSheet.name)
-        print("... number of rows = %d" % wSheet.nrows)
-        print("... number of columns = %d" % wSheet.ncols)
-
-    # Handle negative indexes for removing rows and colums
-    for item in options.remrows:
-        if(item<0):
-            options.remrows.remove(item)
-            options.remrows.add(wSheet.nrows+item)
-    for item in options.remcols:
-        if(item<0):
-            options.remcols.remove(item)
-            options.remcols.add(wSheet.ncols+item)
-
-    for data in convertFactory(options,wSheet):
-        outfile.write((options.separator).join(data))
-        if(NIX):
-            outfile.write("\n")
+    def __init__(self, xlsfile, **options):
+        if(options["colasint"]):
+            if(not options["colasint"] == "all"):
+                options["colasint"] = set([int(x) for x in options["colasint"].split(':')])
         else:
-            outfile.write("\r\n")
+            options["colasint"] = set()
 
-    outfile.close()
+        if(options["remrows"]):
+            options["remrows"] = set([int(x) for x in options["remrows"].split(':')])
+        else:
+            options["remrows"] = set()
+
+        if(options["remcols"]):
+            options["remcols"] = set([int(x) for x in options["remcols"].split(':')])
+        else:
+            options["remcols"] = set()
+
+        if(options["lineend"] not in ["CRLF","LF"]):
+            options["lineend"] = "LF"
+
+        self.options = options
+        # Open input file
+        if(options["inputEncoding"]):
+            self.book = xlrd.open_workbook(filename=xlsfile, encoding_override=options["inputEncoding"])
+        else:
+            self.book = xlrd.open_workbook(filename=xlsfile)
+
+    def convertFactory(self, wSheet):
+        for numRow in range(wSheet.nrows):
+            if(numRow not in self.options["remrows"]):
+                liste = []
+                for numCol in range(wSheet.ncols):
+                    if(numCol not in self.options["remcols"]):
+                        cellType = wSheet.cell_type(numRow,numCol)
+                        cellValue = wSheet.cell_value(numRow,numCol)
+                        if((self.options["colasint"] == "all") or (cellType == xlrd.XL_CELL_BOOLEAN) or (cellType == xlrd.XL_CELL_NUMBER and numCol in self.options["colasint"] )):
+                            try:
+                                liste.append(str(int(cellValue)))
+                            except ValueError as error:
+                                liste.append(cellValue)
+                                #~ warnings.warn("Bad cell format : gets string, expects number", stacklevel=2)
+                        elif(cellType == xlrd.XL_CELL_NUMBER ):
+                            liste.append(str(cellValue))
+                        elif(cellType == xlrd.XL_CELL_DATE ):
+                            # trying to handle dates - maybe buggy at this time !
+                            # by default, datemode is 1900-based
+                            datemode = 0 # 1900-based
+                            # datemode = 1 # 1904-based
+                            tp = xlrd.xldate_as_tuple(cellValue,0)
+                            mydate = datetime.datetime( tp[0], tp[1], tp[2], tp[3], tp[4], tp[5] )
+                            # return isoformat (may be improved in the future)
+                            liste.append(mydate.isoformat())
+                        else:
+                            # conversion for latin-1 : really needed ??
+                            if(self.options["encloseText"]):
+                                cellValue = cellValue.replace("\"","\"\"")
+                                liste.append("\"%s\""%(cellValue))
+                            else:
+                                liste.append(cellValue)
+                yield liste
+
+    def convert(self, outfile, sheetid=1):
+        WIN32 = True if (sys.platform == 'win32') else False
+        if(self.options["lineend"] == "LF"):
+            NIX = True
+        else:
+            NIX = False
+
+        # Open output file
+        outfile = codecs.open(outfile, 'w', encoding=self.options["outputEncoding"])
+
+        # Statistics
+        nSheets = self.book.nsheets
+        #if(self.options["stats"]):
+        #    print("\nStatistics of input Excel file :")
+        #    print("... sheets found = %d" % nSheets)
+        #    print("... encoding = %s" % self.book.encoding)
+
+        if(sheetid >= nSheets or sheetid < 0):
+            raise ValueError
+
+        # Select working sheet
+        wSheet = self.book.sheet_by_index(sheetid)
+        #if(self.options["stats"]):
+        #    print("\nStatistics of sheet #%d" % self.options["numsheet"])
+        #    print("... sheet name = %s" % wSheet.name)
+        #    print("... number of rows = %d" % wSheet.nrows)
+        #    print("... number of columns = %d" % wSheet.ncols)
+
+        # Handle negative indexes for removing rows and colums
+        for item in self.options["remrows"]:
+            if(item<0):
+                self.options["remrows"].remove(item)
+                self.options["remrows"].add(wSheet.nrows+item)
+        for item in self.options["remcols"]:
+            if(item<0):
+                self.options["remcols"].remove(item)
+                self.options["remcols"].add(wSheet.ncols+item)
+
+        for data in self.convertFactory(wSheet):
+            outfile.write((self.options["separator"]).join(data))
+            if(NIX):
+                outfile.write("\n")
+            else:
+                outfile.write("\r\n")
+
+        outfile.close()
 
 
 
@@ -224,7 +247,20 @@ def main():
     if( (not options.ifname) or (not options.ofname) ):
         parser.error("options -i and -o are mandatory")
 
-    convert2csv(options)
+    kwargs = {
+        "separator": options.separator,
+        "encloseText": options.encloseText,
+        "inputEncoding": options.inputEncoding,
+        "outputEncoding": options.outputEncoding,
+        "colasint": options.colasint,
+        "remrows": options.remrows,
+        "remcols": options.remcols,
+        "lineend": options.lineend,
+        "stats": options.stats,
+        "verbose": options.verbose
+    }
+
+    Xls2csv(options.ifname, **kwargs).convert(options.ofname, options.numsheet)
 
 if __name__ == "__main__":
     main()
