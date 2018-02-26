@@ -63,42 +63,6 @@ except ImportError:
     sys.exit(1)
 
 
-def manageOptions(options):
-    if(options.verbose):
-        print("\nOptions given to the conversion function :")
-        print("... input filename = %s" % options.ifname)
-        print("... output filename = %s" % options.ofname)
-        print("... sheet to convert = %d" % options.numsheet)
-        print("... separator = %s" % options.separator)
-        print("... override input encoding = %s" % options.inputEncoding)
-        print("... columns containing integers = %s" % options.colasint)
-        print("... removing rows = %s" % options.remrows)
-        print("... removing columns = %s" % options.remcols)
-        print("... print statistics = %s" % options.stats)
-        print("... set output encoding = %s" % options.outputEncoding)
-        print("... set output lineend = %s" % options.lineend)
-
-    if(options.colasint):
-        if(not options.colasint == "all"):
-            options.colasint = set([int(x) for x in options.colasint.split(':')])
-    else:
-        options.colasint = set()
-
-    if(options.remrows):
-        options.remrows = set([int(x) for x in options.remrows.split(':')])
-    else:
-        options.remrows = set()
-
-    if(options.remcols):
-        options.remcols = set([int(x) for x in options.remcols.split(':')])
-    else:
-        options.remcols = set()
-
-    if(options.lineend not in ["CRLF","LF"]):
-        options.lineend = "LF"
-
-    return options
-
 class Xls2csv():
 
     def __init__(self, xlsfile, **options):
