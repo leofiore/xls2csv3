@@ -66,18 +66,18 @@ except ImportError:
 class Xls2csv():
 
     def __init__(self, xlsfile, **options):
-        if "colasint" in options:
+        if "colasint" in options and options["colasint"] is not None:
             if(not options["colasint"] == "all"):
                 options["colasint"] = set([int(x) for x in options["colasint"].split(':')])
         else:
             options["colasint"] = set()
 
-        if "remrows" in options:
+        if "remrows" in options and options["remrows"] is not None:
             options["remrows"] = set([int(x) for x in options["remrows"].split(':')])
         else:
             options["remrows"] = set()
 
-        if "remcols" in options:
+        if "remcols" in options and options["remcols"] is not None:
             options["remcols"] = set([int(x) for x in options["remcols"].split(':')])
         else:
             options["remcols"] = set()
