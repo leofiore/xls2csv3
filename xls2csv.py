@@ -66,28 +66,28 @@ except ImportError:
 class Xls2csv():
 
     def __init__(self, xlsfile, **options):
-        if(options["colasint"]):
+        if "colasint" in options:
             if(not options["colasint"] == "all"):
                 options["colasint"] = set([int(x) for x in options["colasint"].split(':')])
         else:
             options["colasint"] = set()
 
-        if(options["remrows"]):
+        if "remrows" in options:
             options["remrows"] = set([int(x) for x in options["remrows"].split(':')])
         else:
             options["remrows"] = set()
 
-        if(options["remcols"]):
+        if "remcols" in options:
             options["remcols"] = set([int(x) for x in options["remcols"].split(':')])
         else:
             options["remcols"] = set()
 
-        if(options["lineend"] not in ["CRLF","LF"]):
+        if("lineend" in options and options["lineend"] not in ["CRLF","LF"]):
             options["lineend"] = "LF"
 
         self.options = options
         # Open input file
-        if(options["inputEncoding"]):
+        if "inputEncoding" in options:
             self.book = xlrd.open_workbook(filename=xlsfile, encoding_override=options["inputEncoding"])
         else:
             self.book = xlrd.open_workbook(filename=xlsfile)
