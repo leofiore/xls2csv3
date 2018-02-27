@@ -164,11 +164,11 @@ class Xls2csv():
         #    print("... sheets found = %d" % nSheets)
         #    print("... encoding = %s" % self.book.encoding)
 
-        if(sheetid > nSheets or sheetid < 0):
+        if(sheetid > nSheets or sheetid < 1):
             raise ValueError("sheet {} is not present in workbook".format(sheetid))
 
         # Select working sheet
-        wSheet = self.book.sheet_by_index(sheetid)
+        wSheet = self.book.sheet_by_index(sheetid - 1)
         #if(self.options["stats"]):
         #    print("\nStatistics of sheet #%d" % self.options["numsheet"])
         #    print("... sheet name = %s" % wSheet.name)
