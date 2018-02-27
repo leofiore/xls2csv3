@@ -49,7 +49,6 @@ import os
 import sys
 import warnings
 import datetime
-import codecs
 
 from optparse import OptionParser
 
@@ -133,8 +132,10 @@ class Xls2csv():
         else:
             NIX = False
 
-        # Open output file
-        outfile = codecs.open(outfile, 'w', encoding=self.options["outputEncoding"])
+        if isinstance(outfile, str):
+            # Open output file if string (assuming otherwise that a file
+            # pointer is passed)
+            outfile = open(outfile, 'w', encoding=self.options["outputEncoding"])
 
         # Statistics
         nSheets = self.book.nsheets
