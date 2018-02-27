@@ -164,8 +164,8 @@ class Xls2csv():
         #    print("... sheets found = %d" % nSheets)
         #    print("... encoding = %s" % self.book.encoding)
 
-        if(sheetid >= nSheets or sheetid < 0):
-            raise ValueError
+        if(sheetid > nSheets or sheetid < 0):
+            raise ValueError("sheet {} is not present in workbook".format(sheetid))
 
         # Select working sheet
         wSheet = self.book.sheet_by_index(sheetid)
@@ -202,8 +202,8 @@ def main():
                       help="input Excel filename")
     parser.add_option("-o", "--output", dest="ofname",
                       help="output CSV filename")
-    parser.add_option("-s", "--sheet", dest="numsheet", type="int", default=0,
-                      help="sheet number to convert (1st sheet is numbered '0', so it's 0 by default)")
+    parser.add_option("-s", "--sheet", dest="numsheet", type="int", default=1,
+                      help="sheet number to convert (1st sheet is numbered '1', so it's 1 by default)")
     parser.add_option("-p", "--sep", dest="separator", default=";",
                       help="separator used in the csv file (';' as Excel default conversion character)")
     parser.add_option("-e", "--enclose-text", action="store_true", dest="encloseText", default=False,
