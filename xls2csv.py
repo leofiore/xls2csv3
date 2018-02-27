@@ -192,7 +192,8 @@ class Xls2csv():
             else:
                 outfile.write("\r\n")
 
-        outfile.close()
+        if isinstance(outfile, str):
+            outfile.close()
 
 
 
