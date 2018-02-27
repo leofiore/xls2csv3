@@ -81,8 +81,27 @@ class Xls2csv():
         else:
             options["remcols"] = set()
 
-        if("lineend" in options and options["lineend"] not in ["CRLF","LF"]):
+        if "lineend" in options:
+            if options["lineend"] == '\n':
+                options["lineend"] = "LF"
+            elif options["lineend"] == '\r\n':
+                options["lineend"] = "CRLF"
+            elif options["lineend"] not in ["CRLF","LF"]:
+                options["lineend"] = "LF"
+        else:
             options["lineend"] = "LF"
+
+        if not "separator" in options:
+            options["separator"] = ';'
+
+        if not "encloseText" in options:
+            options["encloseText"] = False
+
+        if not "inputEncoding" in options:
+            options["inputEncoding"] = 'utf8'
+
+        if not "outputEncoding" in options:
+            options["outputEncoding"] = 'utf8'
 
         self.options = options
         # Open input file
@@ -90,6 +109,7 @@ class Xls2csv():
             self.book = xlrd.open_workbook(filename=xlsfile, encoding_override=options["inputEncoding"])
         else:
             self.book = xlrd.open_workbook(filename=xlsfile)
+
 
     def convertFactory(self, wSheet):
         for numRow in range(wSheet.nrows):
